@@ -176,7 +176,7 @@ export default {
       images: [],
       product_variant: [
         {
-          option: this.variants,
+          option: this.variants[0].id,
           tags: [],
         },
       ],
@@ -237,7 +237,7 @@ export default {
 
     // store product into database
     saveProduct() {
-      let product = {
+      let update_product = {
         title: this.product_name,
         sku: this.product_sku,
         description: this.description,
@@ -247,7 +247,7 @@ export default {
       };
 
       axios
-        .put("/product/1", product)
+        .put("/product/"+this.product.id, update_product)
         .then((response) => {
           console.log(response.data);
         //   window.location.href = "/product";

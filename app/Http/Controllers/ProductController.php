@@ -12,9 +12,10 @@ use yajra\DataTables\DataTables;
 
 class ProductController extends Controller
 {
-    private $colors = [];
-    private $sizes = [];
-    private $styles = [];
+    private $variants_one = [];
+    private $variants_two = [];
+    private $variants_three = [];
+    private $variants = [];
     /**
      * Display a listing of the resource.
      *
@@ -24,7 +25,7 @@ class ProductController extends Controller
     {
         if ($request->ajax()) {
             $query = "SELECT p.*, pv.variant, pvp.price, pvp.stock from products p left join product_variants pv on pv.product_id=p.id left join product_variant_prices pvp on pvp.product_id=p.id where p.id >0";
-           
+
             if ($request->title) {
                 $query .= " and p.title  LIKE '" . $request->title . "%'";
             }
@@ -89,52 +90,72 @@ class ProductController extends Controller
 
     public function storeProductVariant(Request $request, $product)
     {
-        $i = 1;
-        foreach ($request->product_variant as $pv) {
-            foreach ($pv['tags'] as $tag) {
-                $variant = new ProductVariant();
-                $variant->variant = $tag;
-                $variant->variant_id = $pv['option'];
-                $variant->product_id = $product->id;
-                $variant->save();
+        if (count($request->product_variant[0]['tags']) > 0) {
 
-                if ($i == 1) {
-                    $this->colors[] = $variant->id;
-                } else if ($i == 2) {
-                    $this->sizes[] = $variant->id;
-                } else if ($i == 3) {
-                    $this->styles[] = $variant->id;
+            $i = 1;
+            foreach ($request->product_variant as $pv) {
+                foreach ($pv['tags'] as $tag) {
+                    $variant = new ProductVariant();
+                    $variant->variant = $tag;
+                    $variant->variant_id = $pv['option'];
+                    $variant->product_id = $product->id;
+                    $variant->save();
+
+                    if ($i == 1) {
+                        $this->variants_one[] = $variant->id;
+                    } else if ($i == 2) {
+                        $this->variants_two[] = $variant->id;
+                    } else if ($i == 3) {
+                        $this->variants_three[] = $variant->id;
+                    }
                 }
+                $i++;
             }
-            $i++;
-        }
 
-        $this->storeProductVariantPrice($request, $product->id);
+            $this->storeProductVariantPrice($request, $product->id);
+        }
         return true;
     }
 
     public function storeProductVariantPrice(Request $request, $product_id)
     {
         $i = 0;
-        foreach ($this->colors as $color) {
-            foreach ($this->sizes as $size) {
-                foreach ($this->styles as $style) {
-                    $variantPrice = new ProductVariantPrice();
-                    $variantPrice->product_variant_one  = $color;
-                    $variantPrice->product_variant_two  = $size;
-                    $variantPrice->product_variant_three  = $style;
-                    $variantPrice->price  = $request->product_variant_prices[$i]['price'];
-                    $variantPrice->stock  = $request->product_variant_prices[$i]['stock'];
-                    $variantPrice->product_id  = $product_id;
-                    $variantPrice->save();
-                    $i++;
+
+        foreach ($this->variants_one as $v_one) {
+            if (count($this->variants_two) > 0) {
+                foreach ($this->variants_two as $v_two) {
+                    if (count($this->variants_three) > 0) {
+                        foreach ($this->variants_three as $v_three) {
+                            $this->insertToProductVariantPrice($request, $product_id, $v_one, $v_two, $v_three, $i);
+                            $i++;
+                        }
+                    } else {
+                        $this->insertToProductVariantPrice($request, $product_id, $v_one, $v_two, null, $i);
+                        $i++;
+                    }
                 }
+            } else {
+                $this->insertToProductVariantPrice($request, $product_id, $v_one, null, null, $i);
+                $i++;
             }
         }
 
         $this->colors = [];
         $this->sizes = [];
         $this->styles = [];
+        return true;
+    }
+
+    public function insertToProductVariantPrice(Request $request, $product_id, $v_one, $v_two = null, $v_three = null, $i)
+    {
+        $variantPrice = new ProductVariantPrice();
+        $variantPrice->product_variant_one  = $v_one;
+        $variantPrice->product_variant_two  = $v_two;
+        $variantPrice->product_variant_three  = $v_three;
+        $variantPrice->price  = $request->product_variant_prices[$i]['price'];
+        $variantPrice->stock  = $request->product_variant_prices[$i]['stock'];
+        $variantPrice->product_id  = $product_id;
+        $variantPrice->save();
         return true;
     }
 
@@ -170,7 +191,27 @@ class ProductController extends Controller
      */
     public function update(Request $request, Product $product)
     {
-        dd($request->all());
+        try {
+            DB::beginTransaction();
+            $product->title = $request->title;
+            $product->sku = $request->sku;
+            $product->description = $request->description;
+            $product->save();
+
+            $this->destroyProductVariant($product);
+            $this->storeProductVariant($request, $product);
+            DB::commit();
+            return $product;
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return false;
+        }
+    }
+
+    public function destroyProductVariant($product)
+    {
+        DB::table('product_variants')->where('product_id', $product->id)->delete();
+        DB::table('product_variant_prices')->where('product_id', $product->id)->delete();
     }
 
     /**

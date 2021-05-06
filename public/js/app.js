@@ -2161,8 +2161,7 @@ __webpack_require__.r(__webpack_exports__);
         product_variant_prices: this.product_variant_prices
       };
       axios.post("/product", product).then(function (response) {
-        console.log(response.data);
-        window.location.href = "/product";
+        console.log(response.data); // window.location.href = "/product";
       })["catch"](function (error) {
         console.log(error);
       });
@@ -2366,7 +2365,7 @@ __webpack_require__.r(__webpack_exports__);
       description: this.product.description,
       images: [],
       product_variant: [{
-        option: this.variants,
+        option: this.variants[0].id,
         tags: []
       }],
       product_variant_prices: [],
@@ -2433,7 +2432,7 @@ __webpack_require__.r(__webpack_exports__);
     },
     // store product into database
     saveProduct: function saveProduct() {
-      var product = {
+      var update_product = {
         title: this.product_name,
         sku: this.product_sku,
         description: this.description,
@@ -2441,7 +2440,7 @@ __webpack_require__.r(__webpack_exports__);
         product_variant: this.product_variant,
         product_variant_prices: this.product_variant_prices
       };
-      axios.put("/product/1", product).then(function (response) {
+      axios.put("/product/" + this.product.id, update_product).then(function (response) {
         console.log(response.data); //   window.location.href = "/product";
       })["catch"](function (error) {
         console.log(error);
