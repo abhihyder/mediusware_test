@@ -172,7 +172,7 @@ export default {
       images: [],
       product_variant: [
         {
-          option: this.variants[0].id,
+          option: this.variants,
           tags: [],
         },
       ],

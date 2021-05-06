@@ -6,17 +6,32 @@ use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\ProductVariantPrice;
 use App\Models\Variant;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
+use yajra\DataTables\DataTables;
 
 class ProductController extends Controller
 {
+    private $colors = [];
+    private $sizes = [];
+    private $styles = [];
     /**
      * Display a listing of the resource.
      *
      * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Http\Response|\Illuminate\View\View
      */
-    public function index()
+    public function index(Request $request)
     {
+        if ($request->ajax()) {
+            $product = Product::orderBy('id', 'desc')->get();
+            return Datatables::of($product)
+                ->addIndexColumn()
+                ->addColumn('action', function ($data) {
+                    $id = $data->id;
+                    return "<a class='btn btn-success btn-sm' href='" . route('product.edit', $id) . "'>Edit</a>";
+                })
+                ->make(true);
+        }
         return view('products.index');
     }
 
@@ -39,7 +54,72 @@ class ProductController extends Controller
      */
     public function store(Request $request)
     {
+        try {
+            DB::beginTransaction();
+            $product = new Product();
+            $product->title = $request->title;
+            $product->sku = $request->sku;
+            $product->description = $request->description;
+            $product->save();
 
+            $this->storeProductVariant($request, $product);
+            DB::commit();
+            return $product;
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return false;
+        }
+    }
+
+    public function storeProductVariant(Request $request, $product)
+    {
+        $i = 1;
+        foreach ($request->product_variant as $pv) {
+            foreach ($pv['tags'] as $tag) {
+                $variant = new ProductVariant();
+                $variant->variant = $tag;
+                $variant->variant_id = $pv['option'];
+                $variant->product_id = $product->id;
+                $variant->save();
+
+                if ($i == 1) {
+                    $this->colors[] = $variant->id;
+                } else if ($i == 2) {
+                    $this->sizes[] = $variant->id;
+                } else if ($i == 3) {
+                    $this->styles[] = $variant->id;
+                }
+            }
+            $i++;
+        }
+
+        $this->storeProductVariantPrice($request, $product->id);
+        return true;
+    }
+
+    public function storeProductVariantPrice(Request $request, $product_id)
+    {
+        $i = 0;
+        foreach ($this->colors as $color) {
+            foreach ($this->sizes as $size) {
+                foreach ($this->styles as $style) {
+                    $variantPrice = new ProductVariantPrice();
+                    $variantPrice->product_variant_one  = $color;
+                    $variantPrice->product_variant_two  = $size;
+                    $variantPrice->product_variant_three  = $style;
+                    $variantPrice->price  = $request->product_variant_prices[$i]['price'];
+                    $variantPrice->stock  = $request->product_variant_prices[$i]['stock'];
+                    $variantPrice->product_id  = $product_id;
+                    $variantPrice->save();
+                    $i++;
+                }
+            }
+        }
+
+        $this->colors = [];
+        $this->sizes = [];
+        $this->styles = [];
+        return true;
     }
 
 
@@ -51,7 +131,6 @@ class ProductController extends Controller
      */
     public function show($product)
     {
-
     }
 
     /**
