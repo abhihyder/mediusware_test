@@ -23,7 +23,22 @@ class ProductController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $product = Product::orderBy('id', 'desc')->get();
+            $query = "SELECT p.*, pv.variant, pvp.price, pvp.stock from products p left join product_variants pv on pv.product_id=p.id left join product_variant_prices pvp on pvp.product_id=p.id where p.id >0";
+           
+            if ($request->title) {
+                $query .= " and p.title  LIKE '" . $request->title . "%'";
+            }
+            if ($request->variant) {
+                $query .= " and pv.variant_id =" . $request->variant;
+            }
+            if ($request->price_from && $request->price_to) {
+                $query .= " and pvp.price BETWEEN " . $request->price_from . " AND " . $request->price_to;
+            }
+            if ($request->date) {
+                $query .= " and p.created_at BETWEEN '" . date('Y-m-d 00:00:00', strtotime($request->date)) . "' AND '" . date('Y-m-d 23:59:59', strtotime($request->date)) . "'";
+            }
+            $query .= " order by p.id desc";
+            $product = DB::select($query);
             return Datatables::of($product)
                 ->addIndexColumn()
                 ->addColumn('action', function ($data) {
@@ -32,7 +47,8 @@ class ProductController extends Controller
                 })
                 ->make(true);
         }
-        return view('products.index');
+        $variants = Variant::all();
+        return view('products.index', compact('variants'));
     }
 
     /**
@@ -142,7 +158,7 @@ class ProductController extends Controller
     public function edit(Product $product)
     {
         $variants = Variant::all();
-        return view('products.edit', compact('variants'));
+        return view('products.edit', compact('product', 'variants'));
     }
 
     /**
@@ -154,7 +170,7 @@ class ProductController extends Controller
      */
     public function update(Request $request, Product $product)
     {
-        //
+        dd($request->all());
     }
 
     /**

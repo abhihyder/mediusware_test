@@ -8,14 +8,17 @@
 
 
 <div class="card">
-    <form action="" method="get" class="card-header">
+    <div id="filterForm" class="card-header">
         <div class="form-row justify-content-between">
             <div class="col-md-2">
-                <input type="text" name="title" placeholder="Product Title" class="form-control">
+                <input type="text" name="title" id="title" placeholder="Product Title" class="form-control">
             </div>
             <div class="col-md-2">
-                <select name="variant" id="" class="form-control">
-
+                <select name="variant" id="variant" class="form-control">
+                    <option value="">Select</option>
+                    @foreach ($variants as $variant)
+                    <option value="{{$variant->id}}">{{$variant->title}}</option>
+                    @endforeach
                 </select>
             </div>
 
@@ -24,18 +27,18 @@
                     <div class="input-group-prepend">
                         <span class="input-group-text">Price Range</span>
                     </div>
-                    <input type="text" name="price_from" aria-label="First name" placeholder="From" class="form-control">
-                    <input type="text" name="price_to" aria-label="Last name" placeholder="To" class="form-control">
+                    <input type="text" name="price_from" id="price_from" aria-label="First name" placeholder="From" class="form-control">
+                    <input type="text" name="price_to" id="price_to" aria-label="Last name" placeholder="To" class="form-control">
                 </div>
             </div>
             <div class="col-md-2">
-                <input type="date" name="date" placeholder="Date" class="form-control">
+                <input type="date" name="date" id="date" placeholder="Date" class="form-control">
             </div>
             <div class="col-md-1">
-                <button type="submit" class="btn btn-primary float-right"><i class="fa fa-search"></i></button>
+                <button type="button" class="btn btn-primary float-right" onclick="filterProduct()"><i class="fa fa-search"></i></button>
             </div>
         </div>
-    </form>
+    </div>
 
     <div class="card-body">
         <div class="table-response">
@@ -97,7 +100,15 @@
     </div> -->
 </div>
 <script>
-    $(function() {
+    $(document).ready(function() {
+        product_list();
+    })
+
+    function filterProduct() {
+        product_list();
+    }
+
+    function product_list() {
         $('#product_table').DataTable({
             destroy: true,
             processing: true,
@@ -106,6 +117,11 @@
                 url: '{{url("product")}}',
                 method: 'GET',
                 data: function(d) {
+                    d.title = $("#title").val();
+                    d.variant = $("#variant").val();
+                    d.price_from = $("#price_from").val();
+                    d.price_to = $("#price_to").val();
+                    d.date = $("#date").val();
                     d._token = '{!! csrf_token() !!}';
                 }
             },
@@ -133,6 +149,6 @@
                 },
             ]
         });
-    });
+    }
 </script>
 @endsection

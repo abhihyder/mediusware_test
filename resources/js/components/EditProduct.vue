@@ -159,6 +159,10 @@ export default {
     InputTag,
   },
   props: {
+    product: {
+      type: Object,
+      required: true,
+    },
     variants: {
       type: Array,
       required: true,
@@ -166,9 +170,9 @@ export default {
   },
   data() {
     return {
-      product_name: "",
-      product_sku: "",
-      description: "",
+      product_name: this.product.title,
+      product_sku: this.product.sku,
+      description: this.product.description,
       images: [],
       product_variant: [
         {
@@ -243,10 +247,10 @@ export default {
       };
 
       axios
-        .post("/product", product)
+        .put("/product/1", product)
         .then((response) => {
           console.log(response.data);
-          window.location.href = "/product";
+        //   window.location.href = "/product";
         })
         .catch((error) => {
           console.log(error);

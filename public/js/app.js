@@ -2350,6 +2350,10 @@ __webpack_require__.r(__webpack_exports__);
     InputTag: vue_input_tag__WEBPACK_IMPORTED_MODULE_2___default.a
   },
   props: {
+    product: {
+      type: Object,
+      required: true
+    },
     variants: {
       type: Array,
       required: true
@@ -2357,9 +2361,9 @@ __webpack_require__.r(__webpack_exports__);
   },
   data: function data() {
     return {
-      product_name: "",
-      product_sku: "",
-      description: "",
+      product_name: this.product.title,
+      product_sku: this.product.sku,
+      description: this.product.description,
       images: [],
       product_variant: [{
         option: this.variants,
@@ -2437,9 +2441,8 @@ __webpack_require__.r(__webpack_exports__);
         product_variant: this.product_variant,
         product_variant_prices: this.product_variant_prices
       };
-      axios.post("/product", product).then(function (response) {
-        console.log(response.data);
-        window.location.href = "/product";
+      axios.put("/product/1", product).then(function (response) {
+        console.log(response.data); //   window.location.href = "/product";
       })["catch"](function (error) {
         console.log(error);
       });
