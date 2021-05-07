@@ -250,7 +250,7 @@ export default {
         .put("/product/"+this.product.id, update_product)
         .then((response) => {
           console.log(response.data);
-        //   window.location.href = "/product";
+          window.location.href = "/product";
         })
         .catch((error) => {
           console.log(error);

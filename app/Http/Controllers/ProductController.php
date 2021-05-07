@@ -15,7 +15,6 @@ class ProductController extends Controller
     private $variants_one = [];
     private $variants_two = [];
     private $variants_three = [];
-    private $variants = [];
     /**
      * Display a listing of the resource.
      *
@@ -140,9 +139,9 @@ class ProductController extends Controller
             }
         }
 
-        $this->colors = [];
-        $this->sizes = [];
-        $this->styles = [];
+        $this->variants_one = [];
+        $this->variants_two = [];
+        $this->variants_three = [];
         return true;
     }
 
