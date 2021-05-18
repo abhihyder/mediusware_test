@@ -82,7 +82,7 @@
                     style="cursor: pointer"
                     >Remove</label
                   >
-                  <label v-else for="">.</label>
+                  <label v-else>.</label>
                   <input-tag
                     v-model="item.tags"
                     @input="checkVariant"
@@ -163,6 +163,18 @@ export default {
       type: Object,
       required: true,
     },
+    product_variants: {
+      type: Array,
+      required: true,
+    },
+    variant_prices: {
+      type: Array,
+      required: true,
+    },
+    product_images: {
+      type: Array,
+      required: true,
+    },
     variants: {
       type: Array,
       required: true,
@@ -170,16 +182,12 @@ export default {
   },
   data() {
     return {
-      product_name: this.product.title,
-      product_sku: this.product.sku,
-      description: this.product.description,
+      product_name: "",
+      product_sku: "",
+      description: "",
       images: [],
-      product_variant: [
-        {
-          option: this.variants[0].id,
-          tags: [],
-        },
-      ],
+      product_variant: [],
+      old_variant_prices: [],
       product_variant_prices: [],
       dropzoneOptions: {
         url: "https://httpbin.org/post",
@@ -187,10 +195,44 @@ export default {
         maxFilesize: 0.5,
         headers: { "My-Awesome-Header": "header value" },
       },
+      errors: "",
     };
   },
   methods: {
     // it will push a new object into product variant
+    initData() {
+      this.product_name = this.product.title;
+      this.product_sku = this.product.sku;
+      this.description = this.product.description;
+      this.old_variant_prices = this.variant_prices;
+    },
+
+    currentVariant() {
+      let option = "";
+      let tags = [];
+      let product_variants = this.product_variants;
+      let variants = this.variants;
+
+      for (let i = 0; i < variants.length; i++) {
+        for (let x = 0; x < product_variants.length; x++) {
+          if (variants[i].id == product_variants[x].variant_id) {
+            option = product_variants[x].variant_id;
+            tags.push(product_variants[x].variant);
+          }
+        }
+
+        if (option && tags.length > 0) {
+          this.product_variant.push({
+            option: option,
+            tags: tags,
+          });
+          option = "";
+          tags = [];
+        }
+      }
+      this.setVariantPrice();
+    },
+
     newVariant() {
       let all_variants = this.variants.map((el) => el.id);
       let selected_variants = this.product_variant.map((el) => el.option);
@@ -222,6 +264,23 @@ export default {
       });
     },
 
+    setVariantPrice() {
+      let i = 0;
+      let tags = [];
+      this.product_variant.filter((item) => {
+        tags.push(item.tags);
+      });
+
+      this.getCombn(tags).forEach((item) => {
+        this.product_variant_prices.push({
+          title: item,
+          price: this.old_variant_prices[i].price,
+          stock: this.old_variant_prices[i].stock,
+        });
+        i++;
+      });
+    },
+
     // combination algorithm
     getCombn(arr, pre) {
       pre = pre || "";
@@ -235,7 +294,7 @@ export default {
       return ans;
     },
 
-    // store product into database
+    // store updated product into database
     saveProduct() {
       let update_product = {
         title: this.product_name,
@@ -247,20 +306,19 @@ export default {
       };
 
       axios
-        .put("/product/"+this.product.id, update_product)
+        .put("/product/" + this.product.id, update_product)
         .then((response) => {
           console.log(response.data);
           window.location.href = "/product";
         })
         .catch((error) => {
-          console.log(error);
+          this.errors = error;
         });
-
-      console.log(product);
     },
   },
   mounted() {
-    console.log(this.variants);
+    this.initData();
+    this.currentVariant();
   },
 };
 </script>

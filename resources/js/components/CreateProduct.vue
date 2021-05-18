@@ -178,10 +178,14 @@ export default {
       ],
       product_variant_prices: [],
       dropzoneOptions: {
-        url: "https://httpbin.org/post",
+        url: "/product-image",
         thumbnailWidth: 150,
         maxFilesize: 0.5,
-        headers: { "My-Awesome-Header": "header value" },
+        addRemoveLinks: true,
+        headers: {
+          "X-CSRF-TOKEN": document.head.querySelector("[name=csrf-token]")
+            .content,
+        },
       },
     };
   },
@@ -246,7 +250,7 @@ export default {
         .post("/product", product)
         .then((response) => {
           console.log(response.data);
-          window.location.href = "/product";
+          // window.location.href = "/product";
         })
         .catch((error) => {
           console.log(error);

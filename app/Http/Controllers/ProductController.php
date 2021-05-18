@@ -3,11 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Models\ProductImage;
 use App\Models\ProductVariant;
 use App\Models\ProductVariantPrice;
 use App\Models\Variant;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 use yajra\DataTables\DataTables;
 
 class ProductController extends Controller
@@ -15,6 +17,7 @@ class ProductController extends Controller
     private $variants_one = [];
     private $variants_two = [];
     private $variants_three = [];
+    private $product_image = [];
     /**
      * Display a listing of the resource.
      *
@@ -71,6 +74,21 @@ class ProductController extends Controller
     public function store(Request $request)
     {
         try {
+            $validator = Validator::make($request->all(), [
+                'title' => 'required',
+                'sku' => 'required',
+                'description' => 'required',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'error' => [
+                        'message' => 'Validation errors',
+                        'errors' => $validator->errors(),
+                    ]
+                ]);
+            }
+
             DB::beginTransaction();
             $product = new Product();
             $product->title = $request->title;
@@ -84,6 +102,28 @@ class ProductController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             return false;
+        }
+    }
+
+    public function imageUpload(Request $request)
+    {
+        $image = $request->file('file');
+        if ($image) {
+            $this->product_image[] = $image;
+        }
+
+        dd($this->product_image);
+    }
+
+    public function imageStore()
+    {
+        $images =  $this->product_image;
+        foreach ($images as $image){
+            $imgName = date("Ymd_His");
+            $ext = strtolower($image->getClientOriginalExtension());
+            $fullName = $imgName . '.' . $ext;
+            $uploadPath = 'public/uploads/products/';
+            $uploadTo = $image->move($uploadPath, $fullName);
         }
     }
 
@@ -177,8 +217,18 @@ class ProductController extends Controller
      */
     public function edit(Product $product)
     {
+        $productVariants = ProductVariant::where('product_id', $product->id)->get();
+        $productVariantPrices = ProductVariantPrice::where('product_id', $product->id)->get();
+        $productImages = ProductImage::where('product_id', $product->id)->get();
         $variants = Variant::all();
-        return view('products.edit', compact('product', 'variants'));
+
+        $data['product'] = $product;
+        $data['productVariants'] = $productVariants;
+        $data['productVariantPrices'] = $productVariantPrices;
+        $data['productImages'] = $productImages;
+        $data['variants'] = $variants;
+
+        return view('products.edit')->with($data);
     }
 
     /**
@@ -191,6 +241,17 @@ class ProductController extends Controller
     public function update(Request $request, Product $product)
     {
         try {
+
+            $validator = Validator::make($request->all(), [
+                'title' => 'required',
+                'sku' => 'required',
+                'description' => 'required',
+            ]);
+
+            if ($validator->fails()) {
+                return $validator->errors();
+            }
+
             DB::beginTransaction();
             $product->title = $request->title;
             $product->sku = $request->sku;
