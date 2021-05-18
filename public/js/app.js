@@ -2113,11 +2113,7 @@ __webpack_require__.r(__webpack_exports__);
           "X-CSRF-TOKEN": document.head.querySelector("[name=csrf-token]").content
         }
       },
-      errors: {
-        title: [],
-        sku: [],
-        description: []
-      }
+      errors: {}
     };
   },
   methods: {
@@ -2188,15 +2184,15 @@ __webpack_require__.r(__webpack_exports__);
           console.log(response.data.success.data);
           _this2.dropzoneOptions.params.product_id = response.data.success.data.id;
 
-          _this2.$refs.myVueDropzone.processQueue(); // window.location.href = "/product";
+          _this2.$refs.myVueDropzone.processQueue();
 
+          window.location.href = "/product";
         } else {
           _this2.errors = response.data.error.errors;
         }
       })["catch"](function (error) {
         console.log(error);
       });
-      console.log(product);
     }
   }
 });
@@ -2218,6 +2214,15 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var vue2_dropzone_dist_vue2Dropzone_min_css__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(vue2_dropzone_dist_vue2Dropzone_min_css__WEBPACK_IMPORTED_MODULE_1__);
 /* harmony import */ var vue_input_tag__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! vue-input-tag */ "./node_modules/vue-input-tag/dist/vueInputTag.common.js");
 /* harmony import */ var vue_input_tag__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(vue_input_tag__WEBPACK_IMPORTED_MODULE_2__);
+//
+//
+//
+//
+//
+//
+//
+//
+//
 //
 //
 //
@@ -2408,14 +2413,21 @@ __webpack_require__.r(__webpack_exports__);
       old_variant_prices: [],
       product_variant_prices: [],
       dropzoneOptions: {
-        url: "https://httpbin.org/post",
+        url: "/product-image-update",
         thumbnailWidth: 150,
         maxFilesize: 0.5,
+        addRemoveLinks: true,
+        uploadMultiple: true,
+        withCredentials: true,
+        autoProcessQueue: false,
+        params: {
+          product_id: ""
+        },
         headers: {
-          "My-Awesome-Header": "header value"
+          "X-CSRF-TOKEN": document.head.querySelector("[name=csrf-token]").content
         }
       },
-      errors: ""
+      errors: {}
     };
   },
   methods: {
@@ -2532,8 +2544,15 @@ __webpack_require__.r(__webpack_exports__);
         product_variant_prices: this.product_variant_prices
       };
       axios.put("/product/" + this.product.id, update_product).then(function (response) {
-        console.log(response.data);
-        window.location.href = "/product";
+        if (response.data.success) {
+          console.log(response.data.success.data);
+          _this3.dropzoneOptions.params.product_id = response.data.success.data.id;
+
+          _this3.$refs.myVueDropzone.processQueue(); // window.location.href = "/product";
+
+        } else {
+          _this3.errors = response.data.error.errors;
+        }
       })["catch"](function (error) {
         _this3.errors = error;
       });
@@ -51332,7 +51351,13 @@ var render = function() {
                     _vm.product_name = $event.target.value
                   }
                 }
-              })
+              }),
+              _vm._v(" "),
+              _vm.errors.title
+                ? _c("small", { staticClass: "text-danger" }, [
+                    _vm._v(_vm._s(_vm.errors.title[0]))
+                  ])
+                : _vm._e()
             ]),
             _vm._v(" "),
             _c("div", { staticClass: "form-group" }, [
@@ -51358,7 +51383,13 @@ var render = function() {
                     _vm.product_sku = $event.target.value
                   }
                 }
-              })
+              }),
+              _vm._v(" "),
+              _vm.errors.sku
+                ? _c("small", { staticClass: "text-danger" }, [
+                    _vm._v(_vm._s(_vm.errors.sku[0]))
+                  ])
+                : _vm._e()
             ]),
             _vm._v(" "),
             _c("div", { staticClass: "form-group" }, [
@@ -51384,7 +51415,13 @@ var render = function() {
                     _vm.description = $event.target.value
                   }
                 }
-              })
+              }),
+              _vm._v(" "),
+              _vm.errors.description
+                ? _c("small", { staticClass: "text-danger" }, [
+                    _vm._v(_vm._s(_vm.errors.description[0]))
+                  ])
+                : _vm._e()
             ])
           ])
         ]),

@@ -115,6 +115,21 @@ class ProductController extends Controller
         }
     }
 
+    public function imageUpdate(Request $request)
+    {
+        dd($request->all());
+        // $this->product_id = $request->product_id;
+        // $images = $request->file('file');
+
+        // if (count($images) > 0) {
+        //     foreach ($images as $image) {
+        //         $this->product_image[] = $image;
+        //     }
+
+        //     $this->imageStore();
+        // }
+    }
+
     public function imageStore()
     {
         $i = 1;
