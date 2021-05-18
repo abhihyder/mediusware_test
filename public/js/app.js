@@ -2548,8 +2548,9 @@ __webpack_require__.r(__webpack_exports__);
           console.log(response.data.success.data);
           _this3.dropzoneOptions.params.product_id = response.data.success.data.id;
 
-          _this3.$refs.myVueDropzone.processQueue(); // window.location.href = "/product";
+          _this3.$refs.myVueDropzone.processQueue();
 
+          window.location.href = "/product";
         } else {
           _this3.errors = response.data.error.errors;
         }

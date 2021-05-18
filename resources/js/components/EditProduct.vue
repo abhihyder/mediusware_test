@@ -332,7 +332,7 @@ export default {
             this.dropzoneOptions.params.product_id =
               response.data.success.data.id;
             this.$refs.myVueDropzone.processQueue();
-            // window.location.href = "/product";
+            window.location.href = "/product";
           } else {
             this.errors = response.data.error.errors;
           }
