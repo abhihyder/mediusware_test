@@ -2064,6 +2064,15 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
+//
+//
 
 
 
@@ -2094,9 +2103,20 @@ __webpack_require__.r(__webpack_exports__);
         thumbnailWidth: 150,
         maxFilesize: 0.5,
         addRemoveLinks: true,
+        uploadMultiple: true,
+        withCredentials: true,
+        autoProcessQueue: false,
+        params: {
+          product_id: ""
+        },
         headers: {
           "X-CSRF-TOKEN": document.head.querySelector("[name=csrf-token]").content
         }
+      },
+      errors: {
+        title: [],
+        sku: [],
+        description: []
       }
     };
   },
@@ -2153,6 +2173,8 @@ __webpack_require__.r(__webpack_exports__);
     },
     // store product into database
     saveProduct: function saveProduct() {
+      var _this2 = this;
+
       var product = {
         title: this.product_name,
         sku: this.product_sku,
@@ -2162,15 +2184,20 @@ __webpack_require__.r(__webpack_exports__);
         product_variant_prices: this.product_variant_prices
       };
       axios.post("/product", product).then(function (response) {
-        console.log(response.data); // window.location.href = "/product";
+        if (response.data.success) {
+          console.log(response.data.success.data);
+          _this2.dropzoneOptions.params.product_id = response.data.success.data.id;
+
+          _this2.$refs.myVueDropzone.processQueue(); // window.location.href = "/product";
+
+        } else {
+          _this2.errors = response.data.error.errors;
+        }
       })["catch"](function (error) {
         console.log(error);
       });
       console.log(product);
     }
-  },
-  mounted: function mounted() {
-    console.log(this.variants);
   }
 });
 
@@ -50897,7 +50924,13 @@ var render = function() {
                     _vm.product_name = $event.target.value
                   }
                 }
-              })
+              }),
+              _vm._v(" "),
+              _vm.errors.title
+                ? _c("small", { staticClass: "text-danger" }, [
+                    _vm._v(_vm._s(_vm.errors.title[0]))
+                  ])
+                : _vm._e()
             ]),
             _vm._v(" "),
             _c("div", { staticClass: "form-group" }, [
@@ -50923,7 +50956,13 @@ var render = function() {
                     _vm.product_sku = $event.target.value
                   }
                 }
-              })
+              }),
+              _vm._v(" "),
+              _vm.errors.sku
+                ? _c("small", { staticClass: "text-danger" }, [
+                    _vm._v(_vm._s(_vm.errors.sku[0]))
+                  ])
+                : _vm._e()
             ]),
             _vm._v(" "),
             _c("div", { staticClass: "form-group" }, [
@@ -50949,7 +50988,13 @@ var render = function() {
                     _vm.description = $event.target.value
                   }
                 }
-              })
+              }),
+              _vm._v(" "),
+              _vm.errors.description
+                ? _c("small", { staticClass: "text-danger" }, [
+                    _vm._v(_vm._s(_vm.errors.description[0]))
+                  ])
+                : _vm._e()
             ])
           ])
         ]),

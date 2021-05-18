@@ -18,6 +18,7 @@ class ProductController extends Controller
     private $variants_two = [];
     private $variants_three = [];
     private $product_image = [];
+    private $product_id = "";
     /**
      * Display a listing of the resource.
      *
@@ -81,12 +82,7 @@ class ProductController extends Controller
             ]);
 
             if ($validator->fails()) {
-                return response()->json([
-                    'error' => [
-                        'message' => 'Validation errors',
-                        'errors' => $validator->errors(),
-                    ]
-                ]);
+                return $this->errorReponseWithErrors('Validation errors!', $validator->errors());
             }
 
             DB::beginTransaction();
@@ -98,7 +94,7 @@ class ProductController extends Controller
 
             $this->storeProductVariant($request, $product);
             DB::commit();
-            return $product;
+            return $this->successReponseWithData('Product added successfully!', $product);
         } catch (\Exception $e) {
             DB::rollBack();
             return false;
@@ -107,23 +103,33 @@ class ProductController extends Controller
 
     public function imageUpload(Request $request)
     {
-        $image = $request->file('file');
-        if ($image) {
-            $this->product_image[] = $image;
-        }
+        $this->product_id = $request->product_id;
+        $images = $request->file('file');
 
-        dd($this->product_image);
+        if (count($images) > 0) {
+            foreach ($images as $image) {
+                $this->product_image[] = $image;
+            }
+
+            $this->imageStore();
+        }
     }
 
     public function imageStore()
     {
+        $i = 1;
         $images =  $this->product_image;
-        foreach ($images as $image){
-            $imgName = date("Ymd_His");
+        foreach ($images as $image) {
+            $imgName = $this->product_id . "_" . $i . "_" . date("Ymd_His");
             $ext = strtolower($image->getClientOriginalExtension());
             $fullName = $imgName . '.' . $ext;
             $uploadPath = 'public/uploads/products/';
             $uploadTo = $image->move($uploadPath, $fullName);
+            $productImage = new ProductImage();
+            $productImage->product_id  = $this->product_id;
+            $productImage->file_path = $uploadPath . $fullName;
+            $productImage->save();
+            $i++;
         }
     }
 
@@ -249,7 +255,7 @@ class ProductController extends Controller
             ]);
 
             if ($validator->fails()) {
-                return $validator->errors();
+                return $this->errorReponseWithErrors('Validation errors!', $validator->errors());
             }
 
             DB::beginTransaction();
@@ -261,7 +267,7 @@ class ProductController extends Controller
             $this->destroyProductVariant($product);
             $this->storeProductVariant($request, $product);
             DB::commit();
-            return $product;
+            return $this->successReponseWithData('Product updated successfully!', $product);
         } catch (\Exception $e) {
             DB::rollBack();
             return false;

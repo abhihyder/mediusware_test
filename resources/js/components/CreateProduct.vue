@@ -12,6 +12,9 @@
                 placeholder="Product Name"
                 class="form-control"
               />
+              <small v-if="errors.title" class="text-danger">{{
+                errors.title[0]
+              }}</small>
             </div>
             <div class="form-group">
               <label for="">Product SKU</label>
@@ -21,6 +24,9 @@
                 placeholder="Product Name"
                 class="form-control"
               />
+              <small v-if="errors.sku" class="text-danger">{{
+                errors.sku[0]
+              }}</small>
             </div>
             <div class="form-group">
               <label for="">Description</label>
@@ -31,6 +37,9 @@
                 rows="4"
                 class="form-control"
               ></textarea>
+              <small v-if="errors.description" class="text-danger">{{
+                errors.description[0]
+              }}</small>
             </div>
           </div>
         </div>
@@ -182,10 +191,21 @@ export default {
         thumbnailWidth: 150,
         maxFilesize: 0.5,
         addRemoveLinks: true,
+        uploadMultiple: true,
+        withCredentials: true,
+        autoProcessQueue: false,
+        params: {
+          product_id: "",
+        },
         headers: {
           "X-CSRF-TOKEN": document.head.querySelector("[name=csrf-token]")
             .content,
         },
+      },
+      errors: {
+        title: [],
+        sku: [],
+        description: [],
       },
     };
   },
@@ -249,8 +269,15 @@ export default {
       axios
         .post("/product", product)
         .then((response) => {
-          console.log(response.data);
-          // window.location.href = "/product";
+          if (response.data.success) {
+            console.log(response.data.success.data);
+            this.dropzoneOptions.params.product_id =
+              response.data.success.data.id;
+            this.$refs.myVueDropzone.processQueue();
+            // window.location.href = "/product";
+          } else {
+            this.errors = response.data.error.errors;
+          }
         })
         .catch((error) => {
           console.log(error);
@@ -258,9 +285,6 @@ export default {
 
       console.log(product);
     },
-  },
-  mounted() {
-    console.log(this.variants);
   },
 };
 </script>
