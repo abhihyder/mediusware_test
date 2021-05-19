@@ -2373,6 +2373,28 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
 
 
 
@@ -2409,11 +2431,13 @@ __webpack_require__.r(__webpack_exports__);
       product_sku: "",
       description: "",
       images: [],
+      old_product_images: [],
+      removed_product_images: [],
       product_variant: [],
       old_variant_prices: [],
       product_variant_prices: [],
       dropzoneOptions: {
-        url: "/product-image-update",
+        url: "/product-image",
         thumbnailWidth: 150,
         maxFilesize: 0.5,
         addRemoveLinks: true,
@@ -2437,6 +2461,7 @@ __webpack_require__.r(__webpack_exports__);
       this.product_sku = this.product.sku;
       this.description = this.product.description;
       this.old_variant_prices = this.variant_prices;
+      this.old_product_images = this.product_images;
     },
     currentVariant: function currentVariant() {
       var option = "";
@@ -2517,6 +2542,10 @@ __webpack_require__.r(__webpack_exports__);
         i++;
       });
     },
+    removeImage: function removeImage(product_id, index) {
+      this.removed_product_images.push(product_id);
+      this.old_product_images.splice(index, 1);
+    },
     // combination algorithm
     getCombn: function getCombn(arr, pre) {
       pre = pre || "";
@@ -2541,7 +2570,8 @@ __webpack_require__.r(__webpack_exports__);
         description: this.description,
         product_image: this.images,
         product_variant: this.product_variant,
-        product_variant_prices: this.product_variant_prices
+        product_variant_prices: this.product_variant_prices,
+        removed_images: this.removed_product_images
       };
       axios.put("/product/" + this.product.id, update_product).then(function (response) {
         if (response.data.success) {
@@ -51426,6 +51456,38 @@ var render = function() {
             ])
           ])
         ]),
+        _vm._v(" "),
+        _c(
+          "div",
+          { staticClass: "card-deck mb-4" },
+          _vm._l(_vm.old_product_images, function(product_image, index) {
+            return _c("div", { staticClass: "card" }, [
+              _c("img", {
+                staticClass: "img-thumbnail",
+                attrs: {
+                  src: "/" + product_image.file_path,
+                  alt: "Card image cap"
+                }
+              }),
+              _vm._v(" "),
+              _c("div", { staticClass: "card-footer" }, [
+                _c(
+                  "button",
+                  {
+                    staticClass: "btn btn-primary btn-sm btn-block",
+                    on: {
+                      click: function($event) {
+                        return _vm.removeImage(product_image.id, index)
+                      }
+                    }
+                  },
+                  [_vm._v("\n              Remove\n            ")]
+                )
+              ])
+            ])
+          }),
+          0
+        ),
         _vm._v(" "),
         _c("div", { staticClass: "card shadow mb-4" }, [
           _vm._m(0),

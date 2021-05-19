@@ -44,6 +44,28 @@
           </div>
         </div>
 
+        <div class="card-deck mb-4">
+          <div
+            class="card"
+            v-for="(product_image, index) in old_product_images"
+          >
+            <img
+              class="img-thumbnail"
+              :src="'/' + product_image.file_path"
+              alt="Card image cap"
+            />
+
+            <div class="card-footer">
+              <button
+                class="btn btn-primary btn-sm btn-block"
+                @click="removeImage(product_image.id, index)"
+              >
+                Remove
+              </button>
+            </div>
+          </div>
+        </div>
+
         <div class="card shadow mb-4">
           <div
             class="card-header py-3 d-flex flex-row align-items-center justify-content-between"
@@ -195,11 +217,13 @@ export default {
       product_sku: "",
       description: "",
       images: [],
+      old_product_images: [],
+      removed_product_images: [],
       product_variant: [],
       old_variant_prices: [],
       product_variant_prices: [],
       dropzoneOptions: {
-        url: "/product-image-update",
+        url: "/product-image",
         thumbnailWidth: 150,
         maxFilesize: 0.5,
         addRemoveLinks: true,
@@ -224,6 +248,7 @@ export default {
       this.product_sku = this.product.sku;
       this.description = this.product.description;
       this.old_variant_prices = this.variant_prices;
+      this.old_product_images = this.product_images;
     },
 
     currentVariant() {
@@ -300,6 +325,10 @@ export default {
       });
     },
 
+    removeImage(product_id, index) {
+      this.removed_product_images.push(product_id);
+      this.old_product_images.splice(index, 1);
+    },
     // combination algorithm
     getCombn(arr, pre) {
       pre = pre || "";
@@ -322,6 +351,7 @@ export default {
         product_image: this.images,
         product_variant: this.product_variant,
         product_variant_prices: this.product_variant_prices,
+        removed_images: this.removed_product_images,
       };
 
       axios

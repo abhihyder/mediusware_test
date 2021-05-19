@@ -9,6 +9,7 @@ use App\Models\ProductVariantPrice;
 use App\Models\Variant;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Validator;
 use yajra\DataTables\DataTables;
 
@@ -115,20 +116,6 @@ class ProductController extends Controller
         }
     }
 
-    public function imageUpdate(Request $request)
-    {
-        dd($request->all());
-        // $this->product_id = $request->product_id;
-        // $images = $request->file('file');
-
-        // if (count($images) > 0) {
-        //     foreach ($images as $image) {
-        //         $this->product_image[] = $image;
-        //     }
-
-        //     $this->imageStore();
-        // }
-    }
 
     public function imageStore()
     {
@@ -281,6 +268,11 @@ class ProductController extends Controller
 
             $this->destroyProductVariant($product);
             $this->storeProductVariant($request, $product);
+
+            if (count($request->removed_images) > 0) {
+                $this->destroyProductImages($request->removed_images);
+            }
+
             DB::commit();
             return $this->successReponseWithData('Product updated successfully!', $product);
         } catch (\Exception $e) {
@@ -293,6 +285,19 @@ class ProductController extends Controller
     {
         DB::table('product_variants')->where('product_id', $product->id)->delete();
         DB::table('product_variant_prices')->where('product_id', $product->id)->delete();
+        return true;
+    }
+
+    public function destroyProductImages($images_id)
+    {
+        $images = ProductImage::whereIn('id', $images_id)->get();
+        foreach ($images as $image) {
+            if (File::exists($image->file_path)) {
+                File::delete($image->file_path);
+            }
+        }
+        ProductImage::whereIn('id', $images_id)->delete();
+        return true;
     }
 
     /**
